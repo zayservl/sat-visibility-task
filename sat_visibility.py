@@ -107,6 +107,15 @@ def observer_ecef(lat_deg: float, lon_deg: float) -> tuple[float, float, float]:
     Returns:
         кортеж координат (x, y, z) в системе ECEF, метры
     """
+    if not math.isfinite(lat_deg):
+        raise ValueError(f"lat_deg должно быть конечным числом, получено: {lat_deg}")
+    if not -90.0 <= lat_deg <= 90.0:
+        raise ValueError(f"lat_deg должна быть в диапазоне [-90, 90], получено: {lat_deg}")
+    if not math.isfinite(lon_deg):
+        raise ValueError(f"lon_deg должно быть конечным числом, получено: {lon_deg}")
+    if not -180.0 <= lon_deg <= 180.0:
+        raise ValueError(f"lon_deg должна быть в диапазоне [-180, 180], получено: {lon_deg}")
+
     lat = math.radians(lat_deg)
     lon = math.radians(lon_deg)
 
@@ -179,6 +188,34 @@ def compute_elevation(
     Returns:
         угол возвышения КА над горизонтом, градусы
     """
+    pos = np.asarray(position_eci, dtype=float)
+    if pos.shape != (3,):
+        raise ValueError(f"position_eci должна быть вектором формы (3,), получена форма: {pos.shape}")
+    if not np.all(np.isfinite(pos)):
+        raise ValueError("position_eci содержит NaN или Inf")
+    if np.linalg.norm(pos) <= _WGS84_A:
+        raise ValueError(
+            f"КА должен находиться над поверхностью Земли (норма > {_WGS84_A}), "
+            f"получена норма: {np.linalg.norm(pos)}"
+        )
+
+    if not math.isfinite(jd_tt):
+        raise ValueError(f"jd_tt должно быть конечным числом, получено: {jd_tt}")
+    if jd_tt <= 0:
+        raise ValueError(f"jd_tt должно быть положительным, получено: {jd_tt}")
+
+    if not math.isfinite(lat_deg):
+        raise ValueError(f"lat_deg должно быть конечным числом, получено: {lat_deg}")
+    if not -90.0 <= lat_deg <= 90.0:
+        raise ValueError(f"lat_deg должна быть в диапазоне [-90, 90], получено: {lat_deg}")
+    if not math.isfinite(lon_deg):
+        raise ValueError(f"lon_deg должно быть конечным числом, получено: {lon_deg}")
+    if not -180.0 <= lon_deg <= 180.0:
+        raise ValueError(f"lon_deg должна быть в диапазоне [-180, 180], получено: {lon_deg}")
+
+    if not math.isfinite(delta_t):
+        raise ValueError(f"delta_t должно быть конечным числом, получено: {delta_t}")
+
     jd_ut1 = jd_tt_to_ut1(jd_tt, delta_t=delta_t)
     gmst_rad = compute_gmst(jd_ut1)
     sat_ecef = eci_to_ecef(position_eci, gmst_rad)
@@ -205,4 +242,10 @@ def is_visible(elevation_deg: float, min_elevation: float = 15.0) -> bool:
     Returns:
         True, если КА виден, иначе False
     """
+    if not math.isfinite(elevation_deg):
+        raise ValueError(f"elevation_deg должно быть конечным числом, получено: {elevation_deg}")
+    if not math.isfinite(min_elevation):
+        raise ValueError(f"min_elevation должно быть конечным числом, получено: {min_elevation}")
+    if not 0.0 <= min_elevation <= 90.0:
+        raise ValueError(f"min_elevation должна быть в диапазоне [0, 90], получено: {min_elevation}")
     return elevation_deg > min_elevation

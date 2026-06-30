@@ -140,6 +140,8 @@ def test_compute_elevation_zenith():
     jd_ut1 = 2451545.0
     gmst_rad = sv.compute_gmst(jd_ut1)
     lon_deg = -math.degrees(gmst_rad)
+    # приводим долготу к диапазону [-180, 180]
+    lon_deg = ((lon_deg + 180.0) % 360.0) - 180.0
     sat_eci = np.array([7000000.0, 0.0, 0.0])
     elev = sv.compute_elevation(sat_eci, jd_ut1 + 69.29 / 86400.0, 0.0, lon_deg)
     assert elev == pytest.approx(90.0, abs=1e-3)
